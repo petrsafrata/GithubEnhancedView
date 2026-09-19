@@ -1,0 +1,54 @@
+/*
+ * Hides the original icons during initialization
+ * to prevent them from briefly flashing before the SVG loads.
+ */
+html.gev-initializing svg.octicon-file,
+html.gev-initializing svg.octicon-file-code,
+html.gev-initializing svg.octicon-file-media,
+html.gev-initializing svg.octicon-file-zip,
+html.gev-initializing svg[aria-label="File"],
+html.gev-initializing svg[aria-label="file"] {
+    visibility: hidden !important;
+}
+
+/*
+ * The original GitHub icon after inserting the SVG icon.
+ */
+[data-gev-native-file-icon="true"] {
+    display: none !important;
+}
+
+/*
+ * SVG icon in the main file list.
+ */
+.gev-file-icon {
+    display: inline-block;
+
+    width: 18px;
+    height: 18px;
+
+    min-width: 18px;
+    max-width: 18px;
+
+    flex: 0 0 18px;
+
+    object-fit: contain;
+
+    vertical-align: middle;
+
+    pointer-events: none;
+    user-select: none;
+}
+
+/*
+ * Smaller variant in the left directory tree.
+ */
+.gev-file-tree-icon {
+    width: 16px;
+    height: 16px;
+
+    min-width: 16px;
+    max-width: 16px;
+
+    flex-basis: 16px;
+}
