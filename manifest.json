@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub Enhanced View",
+  "version": "0.1.0",
+  "description": "Local-first enhancements for GitHub repositories.",
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["dist/content.js"],
+      "css": ["dist/content.css"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dist/icons/*.svg"
+      ],
+      "matches": [
+        "https://github.com/*"
+      ]
+    }
+  ]
+}
