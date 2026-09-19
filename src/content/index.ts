@@ -16,6 +16,19 @@ import {
     applyFileTreeIcons
 } from "./features/fileIcons/fileTreeIcons";
 
+import {
+    applyFileFilter
+} from "./features/fileFilter/fileFilter";
+
+import {
+    updateFilterButton
+} from "./features/fileFilter/filterButton";
+
+import {
+    getFileFilterEnabled,
+    setFileFilterEnabled
+} from "./features/fileFilter/filterStorage";
+
 document.documentElement?.classList.add(
     "gev-initializing"
 );
@@ -25,6 +38,19 @@ console.log(
 );
 
 let processing = false;
+let filterEnabled = false;
+let filterInitialized = false;
+
+function toggleFileFilter(): void {
+    filterEnabled =
+        !filterEnabled;
+
+    void setFileFilterEnabled(
+        filterEnabled
+    );
+
+    enhanceRepository();
+}
 
 function enhanceRepository(): void {
     if (processing) {
@@ -43,13 +69,24 @@ function enhanceRepository(): void {
         const treeIconCount =
             applyFileTreeIcons();
 
-        const appliedCount =
+        if (filterInitialized) {
+            applyFileFilter(
+                filterEnabled
+            );
+
+            updateFilterButton(
+                filterEnabled,
+                toggleFileFilter
+            );
+        }
+
+        const appliedIconCount =
             repositoryIconCount +
             treeIconCount;
 
-        if (appliedCount > 0) {
+        if (appliedIconCount > 0) {
             console.debug(
-                `[GitHub Enhanced View] Applied ${appliedCount} file icons.`
+                `[GitHub Enhanced View] Applied ${appliedIconCount} file icons.`
             );
         }
     } finally {
@@ -67,8 +104,14 @@ function finishInitialization(): void {
     );
 }
 
-function init(): void {
+async function init(): Promise<void> {
     try {
+        filterEnabled =
+            await getFileFilterEnabled();
+
+        filterInitialized =
+            true;
+
         enhanceRepository();
 
         observeGitHubDom(() => {
@@ -82,11 +125,13 @@ function init(): void {
 if (document.readyState === "loading") {
     document.addEventListener(
         "DOMContentLoaded",
-        init,
+        () => {
+            void init();
+        },
         {
             once: true
         }
     );
 } else {
-    init();
+    void init();
 }

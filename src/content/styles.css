@@ -52,3 +52,77 @@ html.gev-initializing svg[aria-label="file"] {
 
     flex-basis: 16px;
 }
+
+/*
+ * Dočasné ovládací tlačítko filtru.
+ *
+ * Později ho můžeme přesunout přímo
+ * do GitHub toolbaru nebo do popup okna.
+ */
+.gev-filter-button {
+    position: fixed;
+
+    right: 24px;
+    bottom: 24px;
+
+    z-index: 999999;
+
+    min-height: 32px;
+
+    padding: 6px 14px;
+
+    border: 1px solid
+        var(
+            --borderColor-default,
+            #30363d
+        );
+
+    border-radius: 6px;
+
+    background:
+        var(
+            --button-default-bgColor-rest,
+            #21262d
+        );
+
+    color:
+        var(
+            --button-default-fgColor-rest,
+            #f0f6fc
+        );
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    line-height: 18px;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 2px 8px
+        rgb(0 0 0 / 20%);
+}
+
+.gev-filter-button:hover {
+    background:
+        var(
+            --button-default-bgColor-hover,
+            #30363d
+        );
+}
+
+.gev-filter-button:focus-visible {
+    outline: 2px solid
+        var(
+            --focus-outlineColor,
+            #2f81f7
+        );
+
+    outline-offset: 2px;
+}

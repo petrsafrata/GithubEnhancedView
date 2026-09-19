@@ -3,11 +3,20 @@
   "name": "GitHub Enhanced View",
   "version": "0.1.0",
   "description": "Local-first enhancements for GitHub repositories.",
+  "permissions": [
+    "storage"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://github.com/*"],
-      "js": ["dist/content.js"],
-      "css": ["dist/content.css"],
+      "matches": [
+        "https://github.com/*"
+      ],
+      "js": [
+        "dist/content.js"
+      ],
+      "css": [
+        "dist/content.css"
+      ],
       "run_at": "document_start"
     }
   ],
