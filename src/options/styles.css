@@ -597,3 +597,146 @@ input {
         justify-self: start;
     }
 }
+
+.repository-settings {
+    margin-top: 20px;
+}
+
+.repository-mappings {
+    display: flex;
+    flex-direction: column;
+}
+
+.repository-mapping {
+    display: grid;
+
+    grid-template-columns:
+        24px
+        minmax(180px, 0.8fr)
+        minmax(260px, 1.4fr)
+        auto;
+
+    align-items: end;
+
+    gap: 12px;
+
+    padding: 16px 20px;
+}
+
+.repository-mapping +
+.repository-mapping {
+    border-top: 1px solid #30363d;
+}
+
+.repository-mapping--disabled {
+    opacity: 0.55;
+}
+
+.repository-mapping__enabled {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 34px;
+
+    cursor: pointer;
+}
+
+.repository-mapping__enabled input {
+    width: 16px;
+    height: 16px;
+
+    margin: 0;
+
+    accent-color: #238636;
+}
+
+.mapping-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+.mapping-field__label {
+    color: #8b949e;
+
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.mapping-path-input {
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Consolas,
+        monospace;
+}
+
+.repository-help {
+    padding: 14px 20px;
+
+    border-top: 1px solid #30363d;
+
+    color: #8b949e;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.repository-help p {
+    margin: 4px 0;
+}
+
+.repository-help code {
+    padding: 2px 5px;
+
+    border: 1px solid #30363d;
+    border-radius: 4px;
+
+    background: #0d1117;
+    color: #c9d1d9;
+}
+
+.repository-mapping-status {
+    min-height: 18px;
+
+    margin: 0;
+    padding: 0 20px 14px;
+
+    color: #3fb950;
+
+    font-size: 12px;
+}
+
+.repository-mappings__empty {
+    margin: 0;
+    padding: 28px 20px;
+
+    color: #8b949e;
+
+    text-align: center;
+}
+
+@media (max-width: 800px) {
+    .repository-mapping {
+        grid-template-columns:
+            24px
+            minmax(0, 1fr);
+
+        align-items: center;
+    }
+
+    .repository-mapping
+    .mapping-field,
+    .repository-mapping
+    .danger-button {
+        grid-column: 2;
+    }
+
+    .repository-mapping
+    .danger-button {
+        justify-self: start;
+    }
+}

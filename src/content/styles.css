@@ -241,3 +241,62 @@ html.gev-initializing svg[aria-label="file"] {
 
     outline-offset: 2px;
 }
+
+/*
+ * VS Code link in the main repository list.
+ */
+.gev-vscode-link {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 18px;
+    height: 18px;
+
+    margin-left: 6px;
+
+    border-radius: 4px;
+
+    vertical-align: middle;
+
+    opacity: 0.72;
+
+    transition:
+        opacity 120ms ease,
+        background-color 120ms ease;
+}
+
+.gev-vscode-link:hover {
+    background:
+        var(
+            --control-transparent-bgColor-hover,
+            rgb(177 186 196 / 12%)
+        );
+
+    opacity: 1;
+}
+
+.gev-vscode-link:focus-visible {
+    outline: 2px solid
+        var(
+            --focus-outlineColor,
+            #2f81f7
+        );
+
+    outline-offset: 2px;
+
+    opacity: 1;
+}
+
+.gev-vscode-link-icon {
+    display: block;
+
+    width: 14px;
+    height: 14px;
+
+    object-fit: contain;
+
+    pointer-events: none;
+    user-select: none;
+}

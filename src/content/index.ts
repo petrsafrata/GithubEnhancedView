@@ -29,6 +29,11 @@ import {
 } from "./features/fileLabels/fileLabels";
 
 import {
+    applyVsCodeLinks,
+    removeVsCodeLinks
+} from "./features/vscodeLinks/vscodeLinks";
+
+import {
     createDefaultExtensionSettings
 } from "../settings/defaultSettings";
 
@@ -38,10 +43,19 @@ import {
     saveExtensionSettings
 } from "../settings/settingsStorage";
 
+import {
+    getRepositoryMappings,
+    observeRepositoryMappings
+} from "../settings/repositoryMappingsStorage";
+
 import type {
     ExtensionSettings,
     FileLabelRule
 } from "../settings/types";
+
+import type {
+    RepositoryMapping
+} from "../settings/repositoryMappingsStorage";
 
 document.documentElement?.classList.add(
     "gev-initializing"
@@ -56,6 +70,9 @@ let settingsInitialized = false;
 
 let settings: ExtensionSettings =
     createDefaultExtensionSettings();
+
+let repositoryMappings:
+    RepositoryMapping[] = [];
 
 function getLabelRulesSignature(
     rules: FileLabelRule[]
@@ -131,6 +148,7 @@ function enhanceRepository(): void {
 
         let appliedIconCount = 0;
         let appliedLabelCount = 0;
+        let appliedVsCodeLinkCount = 0;
 
         if (
             settings.fileIconsEnabled
@@ -156,6 +174,12 @@ function enhanceRepository(): void {
             removeFileLabels();
         }
 
+        appliedVsCodeLinkCount =
+            applyVsCodeLinks(
+                items,
+                repositoryMappings
+            );
+
         if (settingsInitialized) {
             applyFileFilter(
                 settings.fileFilterEnabled,
@@ -179,6 +203,14 @@ function enhanceRepository(): void {
                 `[GitHub Enhanced View] Applied labels to ${appliedLabelCount} files.`
             );
         }
+
+        if (
+            appliedVsCodeLinkCount > 0
+        ) {
+            console.debug(
+                `[GitHub Enhanced View] Applied ${appliedVsCodeLinkCount} VS Code links.`
+            );
+        }
     } finally {
         processing = false;
     }
@@ -196,8 +228,19 @@ function finishInitialization(): void {
 
 async function init(): Promise<void> {
     try {
+        const [
+            loadedSettings,
+            loadedMappings
+        ] = await Promise.all([
+            getExtensionSettings(),
+            getRepositoryMappings()
+        ]);
+
         settings =
-            await getExtensionSettings();
+            loadedSettings;
+
+        repositoryMappings =
+            loadedMappings;
 
         settingsInitialized =
             true;
@@ -225,6 +268,16 @@ async function init(): Promise<void> {
                 settings =
                     newSettings;
 
+                enhanceRepository();
+            }
+        );
+
+        observeRepositoryMappings(
+            (newMappings) => {
+                repositoryMappings =
+                    newMappings;
+
+                removeVsCodeLinks();
                 enhanceRepository();
             }
         );

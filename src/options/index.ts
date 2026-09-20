@@ -26,6 +26,10 @@ import type {
     FilterRulesEditor
 } from "./filterRulesEditor";
 
+import {
+    initializeRepositoryMappingsEditor
+} from "./repositoryMappingsEditor";
+
 const iconsInput =
     getCheckbox("file-icons-enabled");
 
@@ -667,9 +671,11 @@ async function init(): Promise<void> {
                 settings.fileFilterRules
             );
 
-            void saveSettings()
+            void saveSettings();
         }
     );
+
+    await initializeRepositoryMappingsEditor();
 }
 
 void init();

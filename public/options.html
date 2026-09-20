@@ -137,6 +137,51 @@
             </div>
         </section>
 
+        <section class="settings__section repository-settings" aria-labelledby="repository-mappings-heading">
+            <div class="section-heading">
+                <div>
+                    <h2 id="repository-mappings-heading">
+                        Local repository mappings
+                    </h2>
+
+                    <p>
+                        Connect GitHub repositories with
+                        their local directories.
+                    </p>
+                </div>
+
+                <button id="add-repository-mapping" class="primary-button" type="button">
+                    Add repository
+                </button>
+            </div>
+
+            <div id="repository-mappings" class="repository-mappings"></div>
+
+            <div class="repository-help">
+                <p>
+                    Enter the repository as
+                    <code>owner/repository</code>
+                    and its absolute local path.
+                </p>
+
+                <p>
+                    Windows example:
+                    <code>
+                D:\Development\GithubEnhancedView
+            </code>
+                </p>
+
+                <p>
+                    Linux/macOS example:
+                    <code>
+                /home/user/projects/GithubEnhancedView
+            </code>
+                </p>
+            </div>
+
+            <p id="repository-mapping-status" class="repository-mapping-status" aria-live="polite"></p>
+        </section>
+
         <footer class="settings__footer">
             <p id="save-status" class="settings__status" aria-live="polite"></p>
 
