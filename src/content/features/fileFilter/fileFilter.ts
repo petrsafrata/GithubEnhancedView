@@ -6,14 +6,14 @@ const HIDDEN_ATTRIBUTE =
     "data-gev-filter-hidden";
 
 /**
- * Skryje nebo obnoví konkrétní řádek.
+ * Hides or restores a specific row.
  *
- * Používáme zároveň:
- * - vlastní atribut,
- * - nativní hidden,
- * - inline display: none !important.
+ * We use the following at the same time:
+ * - a custom attribute,
+ * - the native `hidden` attribute,
+ * - `display: none !important` inline.
  *
- * Díky tomu GitHub nemůže skrytí přepsat.
+ * This prevents GitHub from overriding the hiding of rows.
  */
 function setElementHidden(
     element: HTMLElement,
@@ -48,7 +48,7 @@ function setElementHidden(
 }
 
 /**
- * Vrátí název souboru z GitHub URL.
+* Returns the filename from a GitHub URL.
  */
 function getFilenameFromHref(
     href: string
@@ -73,7 +73,7 @@ function getFilenameFromHref(
 }
 
 /**
- * Najde hlavní tabulkové řádky se soubory.
+ * Finds the main table rows containing files.
  */
 function getRepositoryFileRows(): Map<
     HTMLElement,
@@ -89,7 +89,7 @@ function getRepositoryFileRows(): Map<
 
     links.forEach((link) => {
         /*
-         * Levý adresářový strom zpracujeme zvlášť.
+         * It processes the left directory tree separately.
          */
         if (
             link.closest(
@@ -122,15 +122,15 @@ function getRepositoryFileRows(): Map<
 }
 
 /**
- * Získá název souboru v levém stromu.
+ * Gets the filename in the left tree.
  */
 function getTreeItemFilename(
     item: HTMLElement
 ): string | null {
     /*
-     * GitHub ukládá název položky také do ID:
+     * GitHub also stores the item name in the ID:
      *
-     * například:
+     * for example:
      * frontend/.gitignore-item
      */
     if (item.id.endsWith("-item")) {
@@ -149,7 +149,7 @@ function getTreeItemFilename(
     }
 
     /*
-     * Záložní varianta pro případ změny GitHub DOM.
+     * Fallback option in case the GitHub DOM changes.
      */
     const text =
         item.textContent?.trim();
@@ -167,10 +167,10 @@ function getTreeItemFilename(
 }
 
 /**
- * Najde soubory v levém adresářovém stromu.
+ * Finds files in the left directory tree.
  *
- * Adresáře mají aria-expanded.
- * Soubory tento atribut nemají.
+ * Directories have `aria-expanded`.
+ * Files do not have this attribute.
  */
 function getFileTreeItems(): Map<
     HTMLElement,
@@ -208,10 +208,10 @@ function getFileTreeItems(): Map<
 }
 
 /**
- * Obnoví všechny prvky, které filtr dříve skryl.
+ * Restores all elements that the filter previously hid.
  *
- * To je důležité také při navigaci GitHubu bez
- * klasického obnovení stránky.
+ * This is also important when navigating GitHub without
+ * a full page reload.
  */
 function restorePreviouslyHiddenElements(): void {
     const elements =
@@ -228,7 +228,7 @@ function restorePreviouslyHiddenElements(): void {
 }
 
 /**
- * Zapne nebo vypne filtrování konfiguračních souborů.
+ * Enables or disables filtering of configuration files.
  */
 export function applyFileFilter(
     enabled: boolean

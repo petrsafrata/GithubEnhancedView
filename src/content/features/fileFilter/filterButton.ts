@@ -55,8 +55,8 @@ export function updateFilterButton(
             : "Hide config files";
 
     /**
-     * Text měníme pouze tehdy, když je opravdu
-     * jiný. Zabráníme zbytečným DOM mutacím.
+     * We only change the text if it is actually
+     * different. This prevents unnecessary DOM mutations.
      */
     if (button.textContent !== text) {
         button.textContent =
