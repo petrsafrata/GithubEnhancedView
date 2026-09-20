@@ -1,11 +1,15 @@
 {
   "manifest_version": 3,
   "name": "GitHub Enhanced View",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Local-first enhancements for GitHub repositories.",
   "permissions": [
     "storage"
   ],
+  "options_ui": {
+    "page": "dist/options.html",
+    "open_in_tab": true
+  },
   "content_scripts": [
     {
       "matches": [

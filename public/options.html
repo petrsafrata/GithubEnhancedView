@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>GitHub Enhanced View Settings</title>
+
+    <link
+        rel="stylesheet"
+        href="./options.css"
+    >
+</head>
+
+<body>
+    <main class="settings">
+        <header class="settings__header">
+            <div>
+                <p class="settings__eyebrow">
+                    Chrome Extension
+                </p>
+
+                <h1>
+                    GitHub Enhanced View
+                </h1>
+
+                <p class="settings__description">
+                    Configure local enhancements for
+                    GitHub repositories.
+                </p>
+            </div>
+        </header>
+
+        <section
+            class="settings__section"
+            aria-labelledby="features-heading"
+        >
+            <h2 id="features-heading">
+                Features
+            </h2>
+
+            <div class="settings__list">
+                <label class="setting">
+                    <span class="setting__content">
+                        <span class="setting__title">
+                            File icons
+                        </span>
+
+                        <span class="setting__description">
+                            Replace GitHub file icons with
+                            file-type-specific SVG icons.
+                        </span>
+                    </span>
+
+                    <span class="switch">
+                        <input
+                            id="file-icons-enabled"
+                            type="checkbox"
+                        >
+
+                        <span
+                            class="switch__track"
+                            aria-hidden="true"
+                        ></span>
+                    </span>
+                </label>
+
+                <label class="setting">
+                    <span class="setting__content">
+                        <span class="setting__title">
+                            File labels
+                        </span>
+
+                        <span class="setting__description">
+                            Display labels based on keywords
+                            found in file names.
+                        </span>
+                    </span>
+
+                    <span class="switch">
+                        <input
+                            id="file-labels-enabled"
+                            type="checkbox"
+                        >
+
+                        <span
+                            class="switch__track"
+                            aria-hidden="true"
+                        ></span>
+                    </span>
+                </label>
+
+                <label class="setting">
+                    <span class="setting__content">
+                        <span class="setting__title">
+                            Hide configuration files
+                        </span>
+
+                        <span class="setting__description">
+                            Hide selected configuration and
+                            generated files in repositories.
+                        </span>
+                    </span>
+
+                    <span class="switch">
+                        <input
+                            id="file-filter-enabled"
+                            type="checkbox"
+                        >
+
+                        <span
+                            class="switch__track"
+                            aria-hidden="true"
+                        ></span>
+                    </span>
+                </label>
+            </div>
+        </section>
+
+        <footer class="settings__footer">
+            <p
+                id="save-status"
+                class="settings__status"
+                aria-live="polite"
+            ></p>
+
+            <button
+                id="reset-settings"
+                class="secondary-button"
+                type="button"
+            >
+                Restore defaults
+            </button>
+        </footer>
+    </main>
+
+    <script
+        type="module"
+        src="./options.js"
+    ></script>
+</body>
+</html>

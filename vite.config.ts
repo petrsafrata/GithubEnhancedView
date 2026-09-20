@@ -1,20 +1,61 @@
-import { defineConfig } from "vite";
-import { resolve } from "node:path";
+import {
+    defineConfig
+} from "vite";
 
-export default defineConfig({
-  build: {
-    outDir: "dist",
-    emptyOutDir: true,
+import {
+    resolve
+} from "node:path";
 
-    rollupOptions: {
-      input: {
-        content: resolve(__dirname, "src/content/index.ts")
-      },
+export default defineConfig(
+    ({ mode }) => {
+        const buildingOptions =
+            mode === "options";
 
-      output: {
-        entryFileNames: "[name].js",
-        assetFileNames: "[name][extname]"
-      }
+        const entryName =
+            buildingOptions
+                ? "options"
+                : "content";
+
+        const entryPath =
+            buildingOptions
+                ? "src/options/index.ts"
+                : "src/content/index.ts";
+
+        return {
+            build: {
+                outDir: "dist",
+
+                /*
+                 * The content build cleans up the dist directory.
+                 * The options build then
+                 * simply adds options.js and CSS to it.
+                 */
+                emptyOutDir:
+                    !buildingOptions,
+
+                cssCodeSplit: true,
+
+                rollupOptions: {
+                    input: {
+                        [entryName]:
+                            resolve(
+                                __dirname,
+                                entryPath
+                            )
+                    },
+
+                    output: {
+                        entryFileNames:
+                            "[name].js",
+
+                        chunkFileNames:
+                            "[name].js",
+
+                        assetFileNames:
+                            "[name][extname]"
+                    }
+                }
+            }
+        };
     }
-  }
-});
+);
