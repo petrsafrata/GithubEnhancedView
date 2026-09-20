@@ -29,6 +29,10 @@ import {
     setFileFilterEnabled
 } from "./features/fileFilter/filterStorage";
 
+import {
+    applyFileLabels
+} from "./features/fileLabels/fileLabels";
+
 document.documentElement?.classList.add(
     "gev-initializing"
 );
@@ -69,6 +73,9 @@ function enhanceRepository(): void {
         const treeIconCount =
             applyFileTreeIcons();
 
+        const labelCount =
+            applyFileLabels(items);
+
         if (filterInitialized) {
             applyFileFilter(
                 filterEnabled
@@ -87,6 +94,12 @@ function enhanceRepository(): void {
         if (appliedIconCount > 0) {
             console.debug(
                 `[GitHub Enhanced View] Applied ${appliedIconCount} file icons.`
+            );
+        }
+
+        if (labelCount > 0) {
+            console.debug(
+                `[GitHub Enhanced View] Applied labels to ${labelCount} files.`
             );
         }
     } finally {
