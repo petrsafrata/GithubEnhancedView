@@ -29,7 +29,7 @@ import {
 } from "./features/fileLabels/fileLabels";
 
 import {
-    DEFAULT_EXTENSION_SETTINGS
+    createDefaultExtensionSettings
 } from "../settings/defaultSettings";
 
 import {
@@ -39,7 +39,8 @@ import {
 } from "../settings/settingsStorage";
 
 import type {
-    ExtensionSettings
+    ExtensionSettings,
+    FileLabelRule
 } from "../settings/types";
 
 document.documentElement?.classList.add(
@@ -53,9 +54,14 @@ console.log(
 let processing = false;
 let settingsInitialized = false;
 
-let settings: ExtensionSettings = {
-    ...DEFAULT_EXTENSION_SETTINGS
-};
+let settings: ExtensionSettings =
+    createDefaultExtensionSettings();
+
+function getLabelRulesSignature(
+    rules: FileLabelRule[]
+): string {
+    return JSON.stringify(rules);
+}
 
 function removeFileIcons(): void {
     document
@@ -142,14 +148,18 @@ function enhanceRepository(): void {
             settings.fileLabelsEnabled
         ) {
             appliedLabelCount =
-                applyFileLabels(items);
+                applyFileLabels(
+                    items,
+                    settings.fileLabelRules
+                );
         } else {
             removeFileLabels();
         }
 
         if (settingsInitialized) {
             applyFileFilter(
-                settings.fileFilterEnabled
+                settings.fileFilterEnabled,
+                settings.fileFilterRules
             );
 
             updateFilterButton(
@@ -200,6 +210,18 @@ async function init(): Promise<void> {
 
         observeExtensionSettings(
             (newSettings) => {
+                const labelsChanged =
+                    getLabelRulesSignature(
+                        settings.fileLabelRules
+                    ) !==
+                    getLabelRulesSignature(
+                        newSettings.fileLabelRules
+                    );
+
+                if (labelsChanged) {
+                    removeFileLabels();
+                }
+
                 settings =
                     newSettings;
 

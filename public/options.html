@@ -1,146 +1,152 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>GitHub Enhanced View Settings</title>
 
-    <link
-        rel="stylesheet"
-        href="./options.css"
-    >
+    <link rel="stylesheet" href="./options.css" />
 </head>
 
 <body>
     <main class="settings">
         <header class="settings__header">
             <div>
-                <p class="settings__eyebrow">
-                    Chrome Extension
-                </p>
+                <p class="settings__eyebrow">Chrome Extension</p>
 
-                <h1>
-                    GitHub Enhanced View
-                </h1>
+                <h1>GitHub Enhanced View</h1>
 
                 <p class="settings__description">
-                    Configure local enhancements for
-                    GitHub repositories.
+                    Configure local enhancements for GitHub repositories.
                 </p>
             </div>
         </header>
 
-        <section
-            class="settings__section"
-            aria-labelledby="features-heading"
-        >
-            <h2 id="features-heading">
-                Features
-            </h2>
+        <section class="settings__section" aria-labelledby="features-heading">
+            <h2 id="features-heading">Features</h2>
 
             <div class="settings__list">
                 <label class="setting">
                     <span class="setting__content">
-                        <span class="setting__title">
-                            File icons
-                        </span>
+                        <span class="setting__title"> File icons </span>
 
                         <span class="setting__description">
-                            Replace GitHub file icons with
-                            file-type-specific SVG icons.
+                            Replace GitHub file icons with file-type-specific SVG icons.
                         </span>
                     </span>
 
                     <span class="switch">
-                        <input
-                            id="file-icons-enabled"
-                            type="checkbox"
-                        >
+                        <input id="file-icons-enabled" type="checkbox" />
 
-                        <span
-                            class="switch__track"
-                            aria-hidden="true"
-                        ></span>
+                        <span class="switch__track" aria-hidden="true"></span>
                     </span>
                 </label>
 
                 <label class="setting">
                     <span class="setting__content">
-                        <span class="setting__title">
-                            File labels
-                        </span>
+                        <span class="setting__title"> File labels </span>
 
                         <span class="setting__description">
-                            Display labels based on keywords
-                            found in file names.
+                            Display labels based on keywords found in file names.
                         </span>
                     </span>
 
                     <span class="switch">
-                        <input
-                            id="file-labels-enabled"
-                            type="checkbox"
-                        >
+                        <input id="file-labels-enabled" type="checkbox" />
 
-                        <span
-                            class="switch__track"
-                            aria-hidden="true"
-                        ></span>
+                        <span class="switch__track" aria-hidden="true"></span>
                     </span>
                 </label>
 
                 <label class="setting">
                     <span class="setting__content">
-                        <span class="setting__title">
-                            Hide configuration files
-                        </span>
+                        <span class="setting__title"> Hide configuration files </span>
 
                         <span class="setting__description">
-                            Hide selected configuration and
-                            generated files in repositories.
+                            Hide selected configuration and generated files in repositories.
                         </span>
                     </span>
 
                     <span class="switch">
-                        <input
-                            id="file-filter-enabled"
-                            type="checkbox"
-                        >
+                        <input id="file-filter-enabled" type="checkbox" />
 
-                        <span
-                            class="switch__track"
-                            aria-hidden="true"
-                        ></span>
+                        <span class="switch__track" aria-hidden="true"></span>
                     </span>
                 </label>
             </div>
         </section>
 
-        <footer class="settings__footer">
-            <p
-                id="save-status"
-                class="settings__status"
-                aria-live="polite"
-            ></p>
+        <section class="settings__section label-settings" aria-labelledby="labels-heading">
+            <div class="section-heading">
+                <div>
+                    <h2 id="labels-heading">File label rules</h2>
 
-            <button
-                id="reset-settings"
-                class="secondary-button"
-                type="button"
-            >
+                    <p>Configure labels applied according to words in file names.</p>
+                </div>
+
+                <div class="section-heading__actions">
+                    <button id="restore-label-rules" class="secondary-button" type="button">
+                        Restore labels
+                    </button>
+
+                    <button id="add-label-rule" class="primary-button" type="button">
+                        Add label
+                    </button>
+                </div>
+            </div>
+
+            <div id="label-rules" class="label-rules"></div>
+        </section>
+
+        <section class="settings__section filter-settings" aria-labelledby="filter-rules-heading">
+            <div class="section-heading">
+                <div>
+                    <h2 id="filter-rules-heading">
+                        File filter rules
+                    </h2>
+
+                    <p>
+                        Hide files by their exact name or
+                        by using * and ? wildcard patterns.
+                    </p>
+                </div>
+
+                <div class="section-heading__actions">
+                    <button id="restore-filter-rules" class="secondary-button" type="button">
+                        Restore filters
+                    </button>
+
+                    <button id="add-filter-rule" class="primary-button" type="button">
+                        Add filter
+                    </button>
+                </div>
+            </div>
+
+            <div id="filter-rules" class="filter-rules"></div>
+
+            <div class="filter-help">
+                <strong>Pattern examples:</strong>
+
+                <code>.gitignore</code>
+                <code>*.lock</code>
+                <code>vite.config.*</code>
+                <code>tsconfig*.json</code>
+            </div>
+        </section>
+
+        <footer class="settings__footer">
+            <p id="save-status" class="settings__status" aria-live="polite"></p>
+
+            <button id="reset-settings" class="secondary-button" type="button">
                 Restore defaults
             </button>
         </footer>
     </main>
 
-    <script
-        type="module"
-        src="./options.js"
-    ></script>
+    <script type="module" src="./options.js"></script>
 </body>
+
 </html>

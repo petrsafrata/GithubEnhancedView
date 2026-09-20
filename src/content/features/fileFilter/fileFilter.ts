@@ -2,6 +2,10 @@ import {
     shouldHideFile
 } from "./filterRules";
 
+import type {
+    FileFilterRule
+} from "../../../settings/types";
+
 const HIDDEN_ATTRIBUTE =
     "data-gev-filter-hidden";
 
@@ -60,13 +64,16 @@ function getFilenameFromHref(
             .split("/")
             .filter(Boolean);
 
-        const filename = parts.at(-1);
+        const filename =
+            parts.at(-1);
 
         if (!filename) {
             return null;
         }
 
-        return decodeURIComponent(filename);
+        return decodeURIComponent(
+            filename
+        );
     } catch {
         return null;
     }
@@ -100,7 +107,9 @@ function getRepositoryFileRows(): Map<
         }
 
         const filename =
-            getFilenameFromHref(link.href);
+            getFilenameFromHref(
+                link.href
+            );
 
         if (!filename) {
             return;
@@ -115,7 +124,10 @@ function getRepositoryFileRows(): Map<
             return;
         }
 
-        result.set(row, filename);
+        result.set(
+            row,
+            filename
+        );
     });
 
     return result;
@@ -137,11 +149,11 @@ function getTreeItemFilename(
         const withoutSuffix =
             item.id.slice(0, -5);
 
-        const parts =
-            withoutSuffix.split("/");
-
         const filename =
-            parts.at(-1)?.trim();
+            withoutSuffix
+                .split("/")
+                .at(-1)
+                ?.trim();
 
         if (filename) {
             return filename;
@@ -158,10 +170,13 @@ function getTreeItemFilename(
         return null;
     }
 
-    const lines = text
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean);
+    const lines =
+        text
+            .split("\n")
+            .map((line) =>
+                line.trim()
+            )
+            .filter(Boolean);
 
     return lines.at(-1) ?? null;
 }
@@ -201,37 +216,35 @@ function getFileTreeItems(): Map<
             return;
         }
 
-        result.set(item, filename);
+        result.set(
+            item,
+            filename
+        );
     });
 
     return result;
 }
 
-/**
- * Restores all elements that the filter previously hid.
- *
- * This is also important when navigating GitHub without
- * a full page reload.
- */
-function restorePreviouslyHiddenElements(): void {
-    const elements =
-        document.querySelectorAll<HTMLElement>(
+function restorePreviouslyHiddenElements():
+    void {
+    document
+        .querySelectorAll<HTMLElement>(
             `[${HIDDEN_ATTRIBUTE}="true"]`
-        );
-
-    elements.forEach((element) => {
-        setElementHidden(
-            element,
-            false
-        );
-    });
+        )
+        .forEach((element) => {
+            setElementHidden(
+                element,
+                false
+            );
+        });
 }
 
 /**
  * Enables or disables filtering of configuration files.
  */
 export function applyFileFilter(
-    enabled: boolean
+    enabled: boolean,
+    rules: FileFilterRule[]
 ): number {
     restorePreviouslyHiddenElements();
 
@@ -241,12 +254,14 @@ export function applyFileFilter(
 
     let hiddenCount = 0;
 
-    const repositoryRows =
-        getRepositoryFileRows();
-
-    repositoryRows.forEach(
+    getRepositoryFileRows().forEach(
         (filename, row) => {
-            if (!shouldHideFile(filename)) {
+            if (
+                !shouldHideFile(
+                    filename,
+                    rules
+                )
+            ) {
                 return;
             }
 
@@ -259,12 +274,14 @@ export function applyFileFilter(
         }
     );
 
-    const treeItems =
-        getFileTreeItems();
-
-    treeItems.forEach(
+    getFileTreeItems().forEach(
         (filename, item) => {
-            if (!shouldHideFile(filename)) {
+            if (
+                !shouldHideFile(
+                    filename,
+                    rules
+                )
+            ) {
                 return;
             }
 

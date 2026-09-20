@@ -8,7 +8,7 @@ import {
 
 import type {
     FileLabelRule
-} from "./types";
+} from "../../../settings/types";
 
 const LABEL_CONTAINER_ATTRIBUTE =
     "data-gev-file-labels";
@@ -207,14 +207,16 @@ function hasLabelContainer(
  * Adds labels to a single file.
  */
 function applyLabelsToFile(
-    item: RepositoryItem
+    item: RepositoryItem,
+    rules: FileLabelRule[]
 ): boolean {
-    const rules =
+    const matchingRules =
         getMatchingFileLabelRules(
-            item.name
+            item.name,
+            rules
         );
 
-    if (rules.length === 0) {
+    if (matchingRules.length === 0) {
         return false;
     }
 
@@ -241,7 +243,7 @@ function applyLabelsToFile(
 
         const container =
             createLabelContainer(
-                rules
+                matchingRules
             );
 
         cell.appendChild(
@@ -259,7 +261,8 @@ function applyLabelsToFile(
  * files in the main list.
  */
 export function applyFileLabels(
-    items: RepositoryItem[]
+    items: RepositoryItem[],
+    rules: FileLabelRule[]
 ): number {
     let appliedCount = 0;
 
@@ -270,7 +273,12 @@ export function applyFileLabels(
         );
 
     files.forEach((file) => {
-        if (applyLabelsToFile(file)) {
+        if (
+            applyLabelsToFile(
+                file,
+                rules
+            )
+        ) {
             appliedCount++;
         }
     });

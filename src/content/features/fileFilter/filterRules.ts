@@ -1,50 +1,72 @@
-const hiddenFilenames = new Set([
-    ".editorconfig",
-    ".gitattributes",
-    ".gitignore",
-    ".npmrc",
-    ".prettierignore",
-    ".prettierrc",
-    ".stylelintignore",
-    ".stylelintrc",
+import type {
+    FileFilterRule
+} from "../../../settings/types";
 
-    "package-lock.json",
-    "pnpm-lock.yaml",
-    "yarn.lock"
-]);
+/**
+ * Converts a simple glob pattern
+ * into a regular expression.
+ *
+ * Supported:
+ *
+ * * -> any number of characters
+ * ? -> exactly one character
+ */
+function globToRegExp(
+    pattern: string
+): RegExp {
+    const escaped =
+        pattern
+            .replace(
+                /[.+^${}()|[\]\\]/g,
+                "\\$&"
+            )
+            .replace(
+                /\*/g,
+                ".*"
+            )
+            .replace(
+                /\?/g,
+                "."
+            );
 
-const hiddenPatterns: RegExp[] = [
-    /^\.eslintrc(?:\..+)?$/i,
-    /^\.prettierrc(?:\..+)?$/i,
-    /^\.stylelintrc(?:\..+)?$/i,
+    return new RegExp(
+        `^${escaped}$`,
+        "i"
+    );
+}
 
-    /^eslint\.config\..+$/i,
-    /^postcss\.config\..+$/i,
-    /^tailwind\.config\..+$/i,
-    /^vite\.config\..+$/i,
-
-    /^tsconfig(?:\..+)?\.json$/i,
-    /^jsconfig(?:\..+)?\.json$/i
-];
-
-export function shouldHideFile(
-    filename: string
+function matchesRule(
+    filename: string,
+    rule: FileFilterRule
 ): boolean {
-    const normalizedFilename =
-        filename.trim().toLowerCase();
-
-    if (
-        hiddenFilenames.has(
-            normalizedFilename
-        )
-    ) {
-        return true;
+    if (!rule.enabled) {
+        return false;
     }
 
-    return hiddenPatterns.some(
-        (pattern) =>
-            pattern.test(
-                normalizedFilename
+    const pattern =
+        rule.pattern.trim();
+
+    if (!pattern) {
+        return false;
+    }
+
+    return globToRegExp(
+        pattern
+    ).test(filename);
+}
+
+export function shouldHideFile(
+    filename: string,
+    rules: FileFilterRule[]
+): boolean {
+    const normalizedFilename =
+        filename.trim();
+
+    return rules.some(
+        (rule) =>
+            matchesRule(
+                normalizedFilename,
+                rule
             )
     );
 }
