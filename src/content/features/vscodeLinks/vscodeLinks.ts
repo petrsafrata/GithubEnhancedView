@@ -2,9 +2,19 @@ import type {
     RepositoryItem
 } from "../../github/types";
 
+import {
+    getRelativeFilePath,
+    getRepositoryContext
+} from "../../github/repositoryContext";
+
+import {
+    OPEN_FILE_IN_VSCODE_MESSAGE
+} from "../../../shared/contentConfigurationMessages";
+
 import type {
-    RepositoryMapping
-} from "../../../settings/repositoryMappingsStorage";
+    ContentRepositoryMapping,
+    OpenFileInVsCodeRequest
+} from "../../../shared/contentConfigurationMessages";
 
 const LINK_ATTRIBUTE =
     "data-gev-vscode-link";
@@ -21,246 +31,98 @@ const ICON_CLASS =
 const VSCODE_ICON_PATH =
     "dist/icons/vscode.svg";
 
-function getCurrentRepository():
-    string | null {
-    const parts =
-        window.location.pathname
-            .split("/")
-            .filter(Boolean);
-
-    if (parts.length < 2) {
-        return null;
-    }
-
-    return `${parts[0]}/${parts[1]}`;
-}
-
 function findRepositoryMapping(
-    mappings: RepositoryMapping[]
-): RepositoryMapping | null {
-    const repository =
-        getCurrentRepository()
-            ?.toLowerCase();
-
-    if (!repository) {
-        return null;
-    }
+    mappings:
+        ContentRepositoryMapping[],
+    repository: string
+): ContentRepositoryMapping | null {
+    const normalizedRepository =
+        repository.toLowerCase();
 
     return mappings.find(
         (mapping) =>
             mapping.enabled &&
-            mapping.localPath.trim() !== "" &&
             mapping.repository
                 .toLowerCase() ===
-                repository
+                normalizedRepository
     ) ?? null;
 }
 
-function isAbsoluteLocalPath(
-    path: string
-): boolean {
-    const normalized =
-        path.trim();
-
-    /*
-     * Windows:
-     * C:\Projects\Repository
-     * C:/Projects/Repository
-     */
-    if (
-        /^[a-zA-Z]:[\\/]/.test(
-            normalized
-        )
-    ) {
-        return true;
-    }
-
-    /*
-     * Windows UNC:
-     * \\server\directory
-     */
-    if (
-        normalized.startsWith(
-            "\\\\"
-        )
-    ) {
-        return true;
-    }
-
-    /*
-     * Linux/macOS:
-     * /home/user/project
-     */
-    return normalized.startsWith("/");
-}
-
-function normalizeLocalPath(
-    path: string
-): string {
-    return path
-        .trim()
-        .replace(/\\/g, "/")
-        .replace(/\/+$/, "");
-}
-
-function encodePath(
-    path: string
-): string {
-    return path
-        .split("/")
-        .map((segment) => {
-            /*
-             * Keep the Windows system disk
-             * C:
-             */
-            if (
-                /^[a-zA-Z]:$/.test(
-                    segment
-                )
-            ) {
-                return segment;
-            }
-
-            return encodeURIComponent(
-                segment
-            );
-        })
-        .join("/");
-}
-
-function createVsCodeUrl(
-    localRoot: string,
+async function requestOpenInVsCode(
+    button: HTMLButtonElement,
+    mappingId: string,
+    repository: string,
     relativePath: string
-): string | null {
-    if (
-        !isAbsoluteLocalPath(
-            localRoot
-        )
-    ) {
-        return null;
+): Promise<void> {
+    if (button.disabled) {
+        return;
     }
 
-    const root =
-        normalizeLocalPath(
-            localRoot
-        );
+    button.disabled = true;
 
-    const relative =
-        relativePath
-            .replace(/\\/g, "/")
-            .replace(/^\/+/, "");
-
-    const fullPath =
-        `${root}/${relative}`;
-
-    return `vscode://file/${encodePath(fullPath)}`;
-}
-
-/**
- * Gets the relative path of a file
- * from a GitHub blob URL.
- *
- * /owner/repository/blob/main/src/App.ts
- * ->
- * src/App.ts
- */
-function getRelativePathFromHref(
-    href: string
-): string | null {
     try {
-        const url =
-            new URL(href);
+        const request:
+            OpenFileInVsCodeRequest = {
+            type:
+                OPEN_FILE_IN_VSCODE_MESSAGE,
 
-        const parts =
-            url.pathname
-                .split("/")
-                .filter(Boolean);
-
-        const blobIndex =
-            parts.indexOf("blob");
-
-        if (
-            blobIndex < 0 ||
-            parts.length <=
-                blobIndex + 2
-        ) {
-            return null;
-        }
+            payload: {
+                mappingId,
+                repository,
+                relativePath
+            }
+        };
 
         /*
-         * The first segment after /blob/
-         * represents the branch.
+         * The response intentionally contains no local
+         * path and no vscode:// URL.
          */
-        const pathParts =
-            parts.slice(
-                blobIndex + 2
-            );
-
-        if (pathParts.length === 0) {
-            return null;
-        }
-
-        return pathParts
-            .map((part) =>
-                decodeURIComponent(part)
-            )
-            .join("/");
-    } catch {
-        return null;
-    }
-}
-
-function getTreeItemPath(
-    item: HTMLElement
-): string | null {
-    if (!item.id.endsWith("-item")) {
-        return null;
-    }
-
-    const path =
-        item.id.slice(0, -5);
-
-    if (!path) {
-        return null;
-    }
-
-    try {
-        return decodeURIComponent(
-            path
+        await chrome.runtime.sendMessage(
+            request
         );
     } catch {
-        return path;
+        /*
+         * Do not log mapping data, local paths
+         * or runtime request details.
+         */
+    } finally {
+        if (button.isConnected) {
+            button.disabled = false;
+        }
     }
 }
 
-function createVsCodeLink(
-    vscodeUrl: string,
+function createVsCodeButton(
     mappingId: string,
-    className: string
-): HTMLAnchorElement {
-    const link =
-        document.createElement("a");
+    repository: string,
+    relativePath: string
+): HTMLButtonElement {
+    const button =
+        document.createElement("button");
 
-    link.className =
-        className;
+    button.type = "button";
 
-    link.href =
-        vscodeUrl;
+    button.className =
+        MAIN_LINK_CLASS;
 
-    link.title =
+    button.title =
         "Open local file in VS Code";
 
-    link.setAttribute(
+    button.setAttribute(
         "aria-label",
         "Open local file in VS Code"
     );
 
-    link.setAttribute(
+    button.setAttribute(
         LINK_ATTRIBUTE,
         "true"
     );
 
-    link.setAttribute(
+    /*
+     * A mapping identifier is not a local path
+     * and contains no filesystem information.
+     */
+    button.setAttribute(
         MAPPING_ATTRIBUTE,
         mappingId
     );
@@ -277,7 +139,6 @@ function createVsCodeLink(
         );
 
     icon.alt = "";
-
     icon.draggable = false;
 
     icon.setAttribute(
@@ -285,20 +146,24 @@ function createVsCodeLink(
         "true"
     );
 
-    link.appendChild(icon);
+    button.appendChild(icon);
 
-    /*
-     * Prevent the GitHub line from
-     * simultaneously opening the file on the web.
-     */
-    link.addEventListener(
+    button.addEventListener(
         "click",
         (event) => {
+            event.preventDefault();
             event.stopPropagation();
+
+            void requestOpenInVsCode(
+                button,
+                mappingId,
+                repository,
+                relativePath
+            );
         }
     );
 
-    return link;
+    return button;
 }
 
 function findMainFileLinks(
@@ -326,7 +191,9 @@ function findMainFileLinks(
 
 function applyMainListLinks(
     items: RepositoryItem[],
-    mapping: RepositoryMapping
+    mapping: ContentRepositoryMapping,
+    repository: string,
+    ref: string
 ): number {
     let appliedCount = 0;
 
@@ -338,21 +205,12 @@ function applyMainListLinks(
 
     files.forEach((file) => {
         const relativePath =
-            getRelativePathFromHref(
-                file.href
+            getRelativeFilePath(
+                file.href,
+                ref
             );
 
         if (!relativePath) {
-            return;
-        }
-
-        const vscodeUrl =
-            createVsCodeUrl(
-                mapping.localPath,
-                relativePath
-            );
-
-        if (!vscodeUrl) {
             return;
         }
 
@@ -376,16 +234,16 @@ function applyMainListLinks(
                 return;
             }
 
-            const vscodeLink =
-                createVsCodeLink(
-                    vscodeUrl,
+            const vscodeButton =
+                createVsCodeButton(
                     mapping.id,
-                    MAIN_LINK_CLASS
+                    repository,
+                    relativePath
                 );
 
             fileLink.insertAdjacentElement(
                 "afterend",
-                vscodeLink
+                vscodeButton
             );
 
             appliedCount++;
@@ -408,11 +266,24 @@ export function removeVsCodeLinks():
 
 export function applyVsCodeLinks(
     items: RepositoryItem[],
-    mappings: RepositoryMapping[]
+    mappings:
+        ContentRepositoryMapping[]
 ): number {
+    const context =
+        getRepositoryContext(items);
+
+    if (!context) {
+        removeVsCodeLinks();
+        return 0;
+    }
+
+    const repository =
+        `${context.owner}/${context.repository}`;
+
     const mapping =
         findRepositoryMapping(
-            mappings
+            mappings,
+            repository
         );
 
     if (!mapping) {
@@ -421,27 +292,27 @@ export function applyVsCodeLinks(
     }
 
     /*
-     * Remove links created
-     * using a different mapping.
+     * Remove buttons created using
+     * a different repository mapping.
      */
     document
         .querySelectorAll<HTMLElement>(
             `[${LINK_ATTRIBUTE}="true"]`
         )
-        .forEach((link) => {
+        .forEach((button) => {
             if (
-                link.getAttribute(
+                button.getAttribute(
                     MAPPING_ATTRIBUTE
                 ) !== mapping.id
             ) {
-                link.remove();
+                button.remove();
             }
         });
 
-    return (
-        applyMainListLinks(
-            items,
-            mapping
-        )
+    return applyMainListLinks(
+        items,
+        mapping,
+        repository,
+        context.ref
     );
 }

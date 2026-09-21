@@ -243,7 +243,11 @@ html.gev-initializing svg[aria-label="file"] {
 }
 
 /*
- * VS Code link in the main repository list.
+ * VS Code button in the main repository list.
+ *
+ * This is intentionally a button rather than
+ * an anchor. No local path or vscode:// URL
+ * is stored in the DOM.
  */
 .gev-vscode-link {
     display: inline-flex;
@@ -254,20 +258,31 @@ html.gev-initializing svg[aria-label="file"] {
     width: 18px;
     height: 18px;
 
-    margin-left: 6px;
+    margin: 0 0 0 6px;
+    padding: 0;
 
+    border: 0;
     border-radius: 4px;
+
+    background: transparent;
+    color: inherit;
+
+    font: inherit;
+    line-height: 1;
 
     vertical-align: middle;
 
     opacity: 0.72;
+
+    appearance: none;
+    cursor: pointer;
 
     transition:
         opacity 120ms ease,
         background-color 120ms ease;
 }
 
-.gev-vscode-link:hover {
+.gev-vscode-link:not(:disabled):hover {
     background:
         var(
             --control-transparent-bgColor-hover,
@@ -287,6 +302,11 @@ html.gev-initializing svg[aria-label="file"] {
     outline-offset: 2px;
 
     opacity: 1;
+}
+
+.gev-vscode-link:disabled {
+    cursor: wait;
+    opacity: 0.45;
 }
 
 .gev-vscode-link-icon {

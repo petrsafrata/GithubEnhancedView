@@ -17,6 +17,7 @@ import {
 import type {
     ContentConfiguration,
     ContentConfigurationChangedMessage,
+    ContentRepositoryMapping,
     GetContentConfigurationRequest,
     GetContentConfigurationResponse,
     SetFileFilterEnabledRequest,
@@ -38,25 +39,11 @@ import {
 } from "../settings/repositoryMappingsStorage";
 
 import "./githubTokenMessageHandler";
+import "./vscodeLinkMessageHandler";
 
-/**
- * Tab IDs that have requested the content configuration.
- *
- * They are stored only in the memory of the service worker.
- */
 const registeredContentTabs =
     new Set<number>();
 
-/**
- * We will make the session cache and persistent local settings
- * accessible only to trusted contexts:
- *
- * - background service worker,
- * - options page,
- * - other extension pages.
- *
- * Content script will lose direct access.
- */
 void Promise.all([
     chrome.storage.session.setAccessLevel({
         accessLevel:
@@ -104,7 +91,7 @@ function isGitHubContentSender(
 
         return (
             url.origin ===
-            "https://github.com"
+                "https://github.com"
         );
     } catch {
         return false;
@@ -144,26 +131,20 @@ function isTreeRequest(
 function isConfigurationRequest(
     value: unknown
 ): value is GetContentConfigurationRequest {
-    if (!isRecord(value)) {
-        return false;
-    }
-
     return (
+        isRecord(value) &&
         value.type ===
-        GET_CONTENT_CONFIGURATION_MESSAGE
+            GET_CONTENT_CONFIGURATION_MESSAGE
     );
 }
 
 function isFilterUpdateRequest(
     value: unknown
 ): value is SetFileFilterEnabledRequest {
-    if (!isRecord(value)) {
-        return false;
-    }
-
     if (
+        !isRecord(value) ||
         value.type !==
-        SET_FILE_FILTER_ENABLED_MESSAGE ||
+            SET_FILE_FILTER_ENABLED_MESSAGE ||
         !isRecord(value.payload)
     ) {
         return false;
@@ -171,7 +152,17 @@ function isFilterUpdateRequest(
 
     return (
         typeof value.payload.enabled ===
-        "boolean"
+            "boolean"
+    );
+}
+
+function isOpenOptionsRequest(
+    value: unknown
+): boolean {
+    return (
+        isRecord(value) &&
+        value.type ===
+            OPEN_OPTIONS_PAGE_MESSAGE
     );
 }
 
@@ -197,30 +188,37 @@ function configurationFailure():
     };
 }
 
-function isOpenOptionsRequest(
-    value: unknown
-): boolean {
-    return (
-        isRecord(value) &&
-        value.type ===
-            OPEN_OPTIONS_PAGE_MESSAGE
-    );
-}
-
 async function loadContentConfiguration():
     Promise<ContentConfiguration> {
     const [
         settings,
-        repositoryMappings
+        storedMappings
     ] = await Promise.all([
         getExtensionSettings(),
         getRepositoryMappings()
     ]);
 
     /*
-     * The object is explicitly constructed.
-     * In the future, a token must not be added here.
+     * Only non-sensitive mapping metadata may
+     * leave the trusted background context.
+     *
+     * localPath is intentionally omitted.
      */
+    const repositoryMappings:
+        ContentRepositoryMapping[] =
+        storedMappings.map(
+            (mapping) => ({
+                id:
+                    mapping.id,
+
+                repository:
+                    mapping.repository,
+
+                enabled:
+                    mapping.enabled
+            })
+        );
+
     return {
         settings,
         repositoryMappings
@@ -303,10 +301,6 @@ async function notifyRegisteredContentTabs():
                 message
             )
             .catch(() => {
-                /*
-                 * The tab no longer exists or does not have
-                 * an active content script.
-                 */
                 registeredContentTabs.delete(
                     tabId
                 );
@@ -331,13 +325,6 @@ chrome.storage.onChanged.addListener(
             return;
         }
 
-        /*
-         * We only send the reloaded,
-         * explicitly enabled configuration.
-         *
-         * Even when the token is saved in the future,
-         * the token will not be included in the message.
-         */
         void notifyRegisteredContentTabs();
     }
 );
@@ -462,6 +449,7 @@ chrome.runtime.onMessage.addListener(
                 sendResponse({
                     success: false
                 });
+
                 return false;
             }
 
@@ -480,6 +468,7 @@ chrome.runtime.onMessage.addListener(
 
             return true;
         }
-    return false;
+
+        return false;
     }
 );

@@ -6,7 +6,8 @@ import {
 
 import type {
     ContentConfiguration,
-    ContentConfigurationChangedMessage
+    ContentConfigurationChangedMessage,
+    ContentRepositoryMapping
 } from "../../shared/contentConfigurationMessages";
 
 function isRecord(
@@ -16,6 +17,51 @@ function isRecord(
         typeof value === "object" &&
         value !== null
     );
+}
+
+function parseRepositoryMapping(
+    value: unknown
+): ContentRepositoryMapping | null {
+    if (!isRecord(value)) {
+        return null;
+    }
+
+    if (
+        typeof value.id !== "string" ||
+        typeof value.repository !==
+            "string" ||
+        typeof value.enabled !==
+            "boolean"
+    ) {
+        return null;
+    }
+
+    const id =
+        value.id.trim();
+
+    const repository =
+        value.repository.trim();
+
+    if (
+        !id ||
+        !repository ||
+        id.length > 200 ||
+        repository.length > 141
+    ) {
+        return null;
+    }
+
+    /*
+     * Explicit construction prevents any accidental
+     * localPath or other future private property
+     * from being retained in the content script.
+     */
+    return {
+        id,
+        repository,
+        enabled:
+            value.enabled
+    };
 }
 
 function parseConfiguration(
@@ -34,13 +80,34 @@ function parseConfiguration(
         return null;
     }
 
-    /*
-     * The background returns data that has already passed
-     * sanitization in settingsStorage and
-     * repositoryMappingsStorage.
-     */
-    return value as unknown as
-        ContentConfiguration;
+    const repositoryMappings:
+        ContentRepositoryMapping[] = [];
+
+    for (
+        const item
+        of value.repositoryMappings
+    ) {
+        const mapping =
+            parseRepositoryMapping(
+                item
+            );
+
+        if (!mapping) {
+            return null;
+        }
+
+        repositoryMappings.push(
+            mapping
+        );
+    }
+
+    return {
+        settings:
+            value.settings as unknown as
+                ContentConfiguration["settings"],
+
+        repositoryMappings
+    };
 }
 
 export async function getContentConfiguration():
@@ -65,7 +132,7 @@ export async function getContentConfiguration():
     } catch {
         /*
          * The error is intentionally not logged.
-         * The content script will use the default settings.
+         * The content script will use default settings.
          */
         return null;
     }
@@ -109,7 +176,7 @@ export function observeContentConfiguration(
 
         if (
             message.type !==
-            CONTENT_CONFIGURATION_CHANGED_MESSAGE
+                CONTENT_CONFIGURATION_CHANGED_MESSAGE
         ) {
             return;
         }

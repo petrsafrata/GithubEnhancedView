@@ -53,8 +53,8 @@ import type {
 } from "../settings/types";
 
 import type {
-    RepositoryMapping
-} from "../settings/repositoryMappingsStorage";
+    ContentRepositoryMapping
+} from "../shared/contentConfigurationMessages";
 
 document.documentElement?.classList.add(
     "gev-initializing"
@@ -71,7 +71,7 @@ let settings: ExtensionSettings =
     createDefaultExtensionSettings();
 
 let repositoryMappings:
-    RepositoryMapping[] = [];
+    ContentRepositoryMapping[] = [];
 
 function getLabelRulesSignature(
     rules: FileLabelRule[]
@@ -80,7 +80,8 @@ function getLabelRulesSignature(
 }
 
 function getMappingsSignature(
-    mappings: RepositoryMapping[]
+    mappings:
+        ContentRepositoryMapping[]
 ): string {
     return JSON.stringify(mappings);
 }
@@ -133,10 +134,6 @@ function toggleFileFilter(): void {
             !settings.fileFilterEnabled
     };
 
-    /*
-     * The content script does not send the entire configuration
-     * nor does it have access to chrome.storage.local.
-     */
     void setFileFilterEnabled(
         settings.fileFilterEnabled
     );
@@ -146,7 +143,8 @@ function toggleFileFilter(): void {
 
 function applyConfiguration(
     newSettings: ExtensionSettings,
-    newMappings: RepositoryMapping[]
+    newMappings:
+        ContentRepositoryMapping[]
 ): void {
     const labelsChanged =
         getLabelRulesSignature(
@@ -283,13 +281,10 @@ async function init(): Promise<void> {
         if (configuration) {
             applyConfiguration(
                 configuration.settings,
-                configuration.repositoryMappings
+                configuration
+                    .repositoryMappings
             );
         } else {
-            /*
-             * The extension will remain functional at least
-             * with the default configuration.
-             */
             settingsInitialized =
                 true;
         }
