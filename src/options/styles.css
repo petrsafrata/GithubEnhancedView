@@ -740,3 +740,142 @@ input {
         justify-self: start;
     }
 }
+
+.github-token-settings {
+    margin-top: 20px;
+}
+
+.github-token-form {
+    display: grid;
+
+    grid-template-columns:
+        minmax(260px, 1fr)
+        auto;
+
+    align-items: end;
+
+    gap: 14px;
+
+    padding: 18px 20px;
+}
+
+.github-token-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+.github-token-field__label {
+    color: #8b949e;
+
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.github-token-input {
+    width: 100%;
+    min-height: 36px;
+
+    padding: 7px 10px;
+
+    border: 1px solid #30363d;
+    border-radius: 6px;
+
+    outline: none;
+
+    background: #0d1117;
+    color: #f0f6fc;
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Consolas,
+        monospace;
+
+    font-size: 13px;
+}
+
+.github-token-input:focus {
+    border-color: #58a6ff;
+
+    box-shadow:
+        0 0 0 3px
+        rgb(88 166 255 / 15%);
+}
+
+.github-token-actions {
+    display: flex;
+
+    gap: 8px;
+}
+
+.github-token-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.github-token-status {
+    min-height: 18px;
+
+    margin: 0;
+    padding: 0 20px 14px;
+
+    font-size: 12px;
+}
+
+.github-token-status--success {
+    color: #3fb950;
+}
+
+.github-token-status--error {
+    color: #f85149;
+}
+
+.github-token-status--muted {
+    color: #8b949e;
+}
+
+.github-token-help {
+    padding: 14px 20px;
+
+    border-top: 1px solid #30363d;
+
+    color: #8b949e;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.github-token-help p {
+    margin: 4px 0;
+}
+
+.github-token-help code {
+    padding: 2px 5px;
+
+    border: 1px solid #30363d;
+    border-radius: 4px;
+
+    background: #0d1117;
+    color: #c9d1d9;
+}
+
+.github-token-help a {
+    color: #58a6ff;
+    text-decoration: none;
+}
+
+.github-token-help a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 700px) {
+    .github-token-form {
+        grid-template-columns: 1fr;
+    }
+
+    .github-token-actions {
+        flex-wrap: wrap;
+    }
+}

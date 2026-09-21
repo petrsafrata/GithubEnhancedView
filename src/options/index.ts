@@ -30,6 +30,10 @@ import {
     initializeRepositoryMappingsEditor
 } from "./repositoryMappingsEditor";
 
+import {
+    initializeGitHubTokenEditor
+} from "./githubTokenEditor";
+
 const iconsInput =
     getCheckbox("file-icons-enabled");
 
@@ -676,6 +680,7 @@ async function init(): Promise<void> {
     );
 
     await initializeRepositoryMappingsEditor();
+    await initializeGitHubTokenEditor();
 }
 
 void init();

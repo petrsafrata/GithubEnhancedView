@@ -8,39 +8,52 @@ import {
 
 export default defineConfig(
     ({ mode }) => {
-        const buildingOptions =
-            mode === "options";
+        const entries = {
+            content: {
+                name: "content",
+                path:
+                    "src/content/index.ts"
+            },
 
-        const entryName =
-            buildingOptions
-                ? "options"
-                : "content";
+            options: {
+                name: "options",
+                path:
+                    "src/options/index.ts"
+            },
 
-        const entryPath =
-            buildingOptions
-                ? "src/options/index.ts"
-                : "src/content/index.ts";
+            background: {
+                name: "background",
+                path:
+                    "src/background/index.ts"
+            }
+        } as const;
+
+        const selectedEntry =
+            mode === "options"
+                ? entries.options
+                : mode === "background"
+                    ? entries.background
+                    : entries.content;
 
         return {
             build: {
                 outDir: "dist",
 
                 /*
-                 * The content build cleans up the dist directory.
-                 * The options build then
-                 * simply adds options.js and CSS to it.
+                 * Only the first content build
+                 * will clean the dist directory.
                  */
                 emptyOutDir:
-                    !buildingOptions,
+                    mode === "content",
 
                 cssCodeSplit: true,
 
                 rollupOptions: {
                     input: {
-                        [entryName]:
+                        [selectedEntry.name]:
                             resolve(
                                 __dirname,
-                                entryPath
+                                selectedEntry.path
                             )
                     },
 

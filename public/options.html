@@ -79,6 +79,69 @@
             </div>
         </section>
 
+        <section class="settings__section github-token-settings" aria-labelledby="github-token-heading">
+            <div class="section-heading">
+                <div>
+                    <h2 id="github-token-heading">GitHub API token</h2>
+
+                    <p>
+                        Optional authentication for private repositories and a higher
+                        GitHub API rate limit.
+                    </p>
+                </div>
+            </div>
+
+            <div class="github-token-form">
+                <label class="github-token-field" for="github-token">
+                    <span class="github-token-field__label">
+                        Fine-grained personal access token
+                    </span>
+
+                    <input id="github-token" class="github-token-input" type="password" autocomplete="new-password"
+                        autocapitalize="none" spellcheck="false" placeholder="github_pat_..." />
+                </label>
+
+                <div class="github-token-actions">
+                    <button id="save-github-token" class="primary-button" type="button" disabled>
+                        Verify and save
+                    </button>
+
+                    <button id="remove-github-token" class="danger-button" type="button" disabled>
+                        Remove token
+                    </button>
+                </div>
+            </div>
+
+            <p id="github-token-status" class="github-token-status github-token-status--muted" aria-live="polite">
+                Loading token status…
+            </p>
+
+            <div class="github-token-help">
+                <p>
+                    Recommended token type:
+                    <strong>Fine-grained personal access token</strong>.
+                </p>
+
+                <p>
+                    Select only the repositories you want to use and grant
+                    <strong>Repository permissions → Contents → Read-only</strong>.
+                </p>
+
+                <p>
+                    The token is stored only in
+                    <code>chrome.storage.local</code>
+                    on this device and is never exposed to GitHub pages.
+                </p>
+
+                <p>
+                    <a href="https://github.com/settings/personal-access-tokens/new" target="_blank"
+                        rel="noopener noreferrer">
+                        Create a fine-grained GitHub token
+                    </a>
+                </p>
+            </div>
+        </section>
+
         <section class="settings__section label-settings" aria-labelledby="labels-heading">
             <div class="section-heading">
                 <div>
@@ -104,13 +167,11 @@
         <section class="settings__section filter-settings" aria-labelledby="filter-rules-heading">
             <div class="section-heading">
                 <div>
-                    <h2 id="filter-rules-heading">
-                        File filter rules
-                    </h2>
+                    <h2 id="filter-rules-heading">File filter rules</h2>
 
                     <p>
-                        Hide files by their exact name or
-                        by using * and ? wildcard patterns.
+                        Hide files by their exact name or by using * and ? wildcard
+                        patterns.
                     </p>
                 </div>
 
@@ -140,14 +201,9 @@
         <section class="settings__section repository-settings" aria-labelledby="repository-mappings-heading">
             <div class="section-heading">
                 <div>
-                    <h2 id="repository-mappings-heading">
-                        Local repository mappings
-                    </h2>
+                    <h2 id="repository-mappings-heading">Local repository mappings</h2>
 
-                    <p>
-                        Connect GitHub repositories with
-                        their local directories.
-                    </p>
+                    <p>Connect GitHub repositories with their local directories.</p>
                 </div>
 
                 <button id="add-repository-mapping" class="primary-button" type="button">
@@ -166,16 +222,12 @@
 
                 <p>
                     Windows example:
-                    <code>
-                D:\Development\GithubEnhancedView
-            </code>
+                    <code> D:\Development\GithubEnhancedView </code>
                 </p>
 
                 <p>
                     Linux/macOS example:
-                    <code>
-                /home/user/projects/GithubEnhancedView
-            </code>
+                    <code> /home/user/projects/GithubEnhancedView </code>
                 </p>
             </div>
 

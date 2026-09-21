@@ -300,3 +300,283 @@ html.gev-initializing svg[aria-label="file"] {
     pointer-events: none;
     user-select: none;
 }
+
+/*
+ * Cell containing the aligned file size.
+ */
+.gev-file-size-cell {
+    position: relative !important;
+
+    padding-right: 92px !important;
+}
+
+/*
+ * When labels are also displayed,
+ * reserve space for both areas.
+ */
+.gev-file-size-cell-with-labels {
+    padding-right: 264px !important;
+}
+
+/*
+ * File size aligned before the label area.
+ */
+.gev-file-size {
+    position: absolute;
+
+    top: 50%;
+    right: 12px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    width: 68px;
+
+    transform: translateY(-50%);
+
+    color:
+        var(
+            --fgColor-muted,
+            #8b949e
+        );
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Consolas,
+        monospace;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    line-height: 16px;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+    user-select: none;
+}
+
+.gev-file-size-cell-with-labels
+.gev-file-size {
+    /*
+     * Labels occupy 150 px plus spacing.
+     */
+    right: 174px;
+}
+
+/*
+ * GitHub API status displayed above
+ * the floating filter button.
+ */
+.gev-api-notice {
+    position: fixed;
+
+    right: 24px;
+    bottom: 68px;
+
+    z-index: 999999;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    width: min(
+        420px,
+        calc(100vw - 48px)
+    );
+
+    min-height: 42px;
+
+    padding: 9px 10px 9px 12px;
+
+    border: 1px solid
+        var(
+            --borderColor-default,
+            #30363d
+        );
+
+    border-radius: 7px;
+
+    background:
+        var(
+            --bgColor-default,
+            #0d1117
+        );
+
+    color:
+        var(
+            --fgColor-default,
+            #f0f6fc
+        );
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    font-size: 12px;
+    line-height: 1.4;
+
+    box-shadow:
+        0 6px 20px
+        rgb(0 0 0 / 28%);
+}
+
+.gev-api-notice--warning {
+    border-color:
+        var(
+            --borderColor-attention-emphasis,
+            #9e6a03
+        );
+}
+
+.gev-api-notice--error {
+    border-color:
+        var(
+            --borderColor-danger-emphasis,
+            #da3633
+        );
+}
+
+.gev-api-notice__icon {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    flex: 0 0 20px;
+
+    border-radius: 50%;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.gev-api-notice--warning
+.gev-api-notice__icon {
+    background:
+        var(
+            --bgColor-attention-muted,
+            rgb(187 128 9 / 20%)
+        );
+
+    color:
+        var(
+            --fgColor-attention,
+            #d29922
+        );
+}
+
+.gev-api-notice--error
+.gev-api-notice__icon {
+    background:
+        var(
+            --bgColor-danger-muted,
+            rgb(248 81 73 / 18%)
+        );
+
+    color:
+        var(
+            --fgColor-danger,
+            #f85149
+        );
+}
+
+.gev-api-notice__message {
+    min-width: 0;
+
+    flex: 1;
+}
+
+.gev-api-notice__actions {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    flex: 0 0 auto;
+}
+
+.gev-api-notice__settings,
+.gev-api-notice__close {
+    border: 0;
+    border-radius: 5px;
+
+    background: transparent;
+
+    color:
+        var(
+            --fgColor-muted,
+            #8b949e
+        );
+
+    font: inherit;
+
+    cursor: pointer;
+}
+
+.gev-api-notice__settings {
+    padding: 4px 7px;
+
+    font-weight: 600;
+}
+
+.gev-api-notice__close {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 26px;
+    height: 26px;
+
+    padding: 0;
+
+    font-size: 18px;
+    line-height: 1;
+}
+
+.gev-api-notice__settings:hover,
+.gev-api-notice__close:hover {
+    background:
+        var(
+            --control-transparent-bgColor-hover,
+            rgb(177 186 196 / 12%)
+        );
+
+    color:
+        var(
+            --fgColor-default,
+            #f0f6fc
+        );
+}
+
+.gev-api-notice__settings:focus-visible,
+.gev-api-notice__close:focus-visible {
+    outline: 2px solid
+        var(
+            --focus-outlineColor,
+            #2f81f7
+        );
+
+    outline-offset: 1px;
+}
+
+@media (max-width: 620px) {
+    .gev-api-notice {
+        right: 12px;
+        bottom: 64px;
+
+        width: calc(100vw - 24px);
+    }
+}

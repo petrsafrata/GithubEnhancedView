@@ -34,19 +34,18 @@ import {
 } from "./features/vscodeLinks/vscodeLinks";
 
 import {
+    applyFileSizes
+} from "./features/fileSizes/fileSizes";
+
+import {
     createDefaultExtensionSettings
 } from "../settings/defaultSettings";
 
 import {
-    getExtensionSettings,
-    observeExtensionSettings,
-    saveExtensionSettings
-} from "../settings/settingsStorage";
-
-import {
-    getRepositoryMappings,
-    observeRepositoryMappings
-} from "../settings/repositoryMappingsStorage";
+    getContentConfiguration,
+    observeContentConfiguration,
+    setFileFilterEnabled
+} from "./settings/contentConfigurationClient";
 
 import type {
     ExtensionSettings,
@@ -78,6 +77,12 @@ function getLabelRulesSignature(
     rules: FileLabelRule[]
 ): string {
     return JSON.stringify(rules);
+}
+
+function getMappingsSignature(
+    mappings: RepositoryMapping[]
+): string {
+    return JSON.stringify(mappings);
 }
 
 function removeFileIcons(): void {
@@ -128,11 +133,53 @@ function toggleFileFilter(): void {
             !settings.fileFilterEnabled
     };
 
-    void saveExtensionSettings(
-        settings
+    /*
+     * The content script does not send the entire configuration
+     * nor does it have access to chrome.storage.local.
+     */
+    void setFileFilterEnabled(
+        settings.fileFilterEnabled
     );
 
     enhanceRepository();
+}
+
+function applyConfiguration(
+    newSettings: ExtensionSettings,
+    newMappings: RepositoryMapping[]
+): void {
+    const labelsChanged =
+        getLabelRulesSignature(
+            settings.fileLabelRules
+        ) !==
+        getLabelRulesSignature(
+            newSettings.fileLabelRules
+        );
+
+    const mappingsChanged =
+        getMappingsSignature(
+            repositoryMappings
+        ) !==
+        getMappingsSignature(
+            newMappings
+        );
+
+    if (labelsChanged) {
+        removeFileLabels();
+    }
+
+    if (mappingsChanged) {
+        removeVsCodeLinks();
+    }
+
+    settings =
+        newSettings;
+
+    repositoryMappings =
+        newMappings;
+
+    settingsInitialized =
+        true;
 }
 
 function enhanceRepository(): void {
@@ -179,6 +226,8 @@ function enhanceRepository(): void {
                 items,
                 repositoryMappings
             );
+
+        applyFileSizes(items);
 
         if (settingsInitialized) {
             applyFileFilter(
@@ -228,22 +277,22 @@ function finishInitialization(): void {
 
 async function init(): Promise<void> {
     try {
-        const [
-            loadedSettings,
-            loadedMappings
-        ] = await Promise.all([
-            getExtensionSettings(),
-            getRepositoryMappings()
-        ]);
+        const configuration =
+            await getContentConfiguration();
 
-        settings =
-            loadedSettings;
-
-        repositoryMappings =
-            loadedMappings;
-
-        settingsInitialized =
-            true;
+        if (configuration) {
+            applyConfiguration(
+                configuration.settings,
+                configuration.repositoryMappings
+            );
+        } else {
+            /*
+             * The extension will remain functional at least
+             * with the default configuration.
+             */
+            settingsInitialized =
+                true;
+        }
 
         enhanceRepository();
 
@@ -251,33 +300,14 @@ async function init(): Promise<void> {
             enhanceRepository();
         });
 
-        observeExtensionSettings(
-            (newSettings) => {
-                const labelsChanged =
-                    getLabelRulesSignature(
-                        settings.fileLabelRules
-                    ) !==
-                    getLabelRulesSignature(
-                        newSettings.fileLabelRules
-                    );
+        observeContentConfiguration(
+            (newConfiguration) => {
+                applyConfiguration(
+                    newConfiguration.settings,
+                    newConfiguration
+                        .repositoryMappings
+                );
 
-                if (labelsChanged) {
-                    removeFileLabels();
-                }
-
-                settings =
-                    newSettings;
-
-                enhanceRepository();
-            }
-        );
-
-        observeRepositoryMappings(
-            (newMappings) => {
-                repositoryMappings =
-                    newMappings;
-
-                removeVsCodeLinks();
                 enhanceRepository();
             }
         );
