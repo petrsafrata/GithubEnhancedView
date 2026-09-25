@@ -1,15 +1,15 @@
 {
   "name": "github-enhanced-view",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Local-first enhancements for GitHub repositories.",
   "main": "index.js",
-"scripts": {
-  "build": "tsc --noEmit && vite build --mode content && vite build --mode options && vite build --mode background",
-  "dev": "vite build --mode content --watch",
-  "dev:options": "vite build --mode options --watch",
-  "dev:background": "vite build --mode background --watch"
-},
+  "scripts": {
+    "build": "tsc --noEmit && vite build --mode content && vite build --mode options && vite build --mode background",
+    "dev": "vite build --mode content --watch",
+    "dev:options": "vite build --mode options --watch",
+    "dev:background": "vite build --mode background --watch"
+  },
   "keywords": [
     "github",
     "chrome-extension",
