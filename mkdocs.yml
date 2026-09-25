@@ -10,8 +10,8 @@ edit_uri: edit/master/docs/
 theme:
   name: material
   language: en
-  logo: images/github-enhanced-view-icon.png
-  favicon: images/github-enhanced-view-icon.png
+  logo: images/github-enhanced-view-logo.png
+  favicon: images/github-enhanced-view-logo.png
   features:
     - navigation.instant
     - navigation.sections
