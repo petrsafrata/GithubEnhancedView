@@ -1,5 +1,5 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
 
 if "%~1"=="" (
     echo Usage: update-version.bat ^<MAJOR.MINOR.PATCH^>
@@ -100,17 +100,16 @@ if exist "package-lock.json" (
 )
 
 git diff --cached --quiet
-set "DIFF_EXIT=!ERRORLEVEL!"
 
-if "!DIFF_EXIT!"=="0" (
+if errorlevel 2 (
+    echo Failed to inspect staged changes.
+    exit /b 1
+)
+
+if not errorlevel 1 (
     echo.
     echo No version changes to commit.
     exit /b 0
-)
-
-if not "!DIFF_EXIT!"=="1" (
-    echo Failed to inspect staged changes.
-    exit /b 1
 )
 
 git commit -m "VERSION: %NEW_VERSION%"
