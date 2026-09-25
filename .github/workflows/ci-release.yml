@@ -1,0 +1,503 @@
+name: Extension CI + Auto Release
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and verify extension
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      artifact-name: ${{ steps.package.outputs.artifact-name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Validate project versions
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node <<'NODE'
+          const fs = require("fs");
+
+          const version = fs
+              .readFileSync("VERSION", "utf8")
+              .trim();
+
+          const semverPattern =
+              /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
+
+          if (!semverPattern.test(version)) {
+              throw new Error(
+                  `VERSION does not contain a valid SemVer version: ${version}`
+              );
+          }
+
+          const manifest =
+              JSON.parse(
+                  fs.readFileSync(
+                      "manifest.json",
+                      "utf8"
+                  )
+              );
+
+          const packageJson =
+              JSON.parse(
+                  fs.readFileSync(
+                      "package.json",
+                      "utf8"
+                  )
+              );
+
+          const packageLock =
+              JSON.parse(
+                  fs.readFileSync(
+                      "package-lock.json",
+                      "utf8"
+                  )
+              );
+
+          const versions = {
+              VERSION: version,
+              "manifest.json": manifest.version,
+              "package.json": packageJson.version,
+              "package-lock.json": packageLock.version,
+              "package-lock.json root package":
+                  packageLock.packages?.[""]?.version
+          };
+
+          for (
+              const [source, currentVersion]
+              of Object.entries(versions)
+          ) {
+              if (currentVersion !== version) {
+                  throw new Error(
+                      `${source} contains version ` +
+                      `${String(currentVersion)}, expected ${version}.`
+                  );
+              }
+          }
+
+          console.log(
+              `All project versions match ${version}.`
+          );
+          NODE
+
+          VERSION_VALUE="$(tr -d '[:space:]' < VERSION)"
+          echo "version=$VERSION_VALUE" >> "$GITHUB_OUTPUT"
+
+      - name: Validate extension files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node <<'NODE'
+          const fs = require("fs");
+
+          const manifest =
+              JSON.parse(
+                  fs.readFileSync(
+                      "manifest.json",
+                      "utf8"
+                  )
+              );
+
+          const requiredFiles = [
+              manifest.background?.service_worker,
+              manifest.options_ui?.page,
+
+              ...Object.values(
+                  manifest.icons ?? {}
+              ),
+
+              ...(manifest.content_scripts ?? [])
+                  .flatMap(
+                      (contentScript) => [
+                          ...(contentScript.js ?? []),
+                          ...(contentScript.css ?? [])
+                      ]
+                  )
+          ].filter(
+              (value) =>
+                  typeof value === "string" &&
+                  value.length > 0
+          );
+
+          const missingFiles =
+              requiredFiles.filter(
+                  (file) =>
+                      !fs.existsSync(file)
+              );
+
+          if (missingFiles.length > 0) {
+              throw new Error(
+                  "Manifest references missing files:\n" +
+                  missingFiles
+                      .map((file) => `- ${file}`)
+                      .join("\n")
+              );
+          }
+
+          console.log(
+              `Validated ${requiredFiles.length} manifest files.`
+          );
+          NODE
+
+      - name: Check content-script security boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CONTENT_BUNDLE="dist/content.js"
+
+          if [[ ! -f "$CONTENT_BUNDLE" ]]; then
+            echo "::error::Content bundle not found: $CONTENT_BUNDLE"
+            exit 1
+          fi
+
+          forbidden_patterns=(
+            "chrome.storage.local"
+            "gev-github-api-token"
+            "gev-extension-settings"
+            "gev-repository-mappings"
+            "TRUSTED_CONTEXTS"
+            "Authorization"
+            "Bearer"
+            "vscode://file/"
+            "localPath"
+          )
+
+          failed=0
+
+          for pattern in "${forbidden_patterns[@]}"; do
+            if grep -Fq "$pattern" "$CONTENT_BUNDLE"; then
+              echo "::error::Forbidden value found in $CONTENT_BUNDLE: $pattern"
+              failed=1
+            fi
+          done
+
+          if [[ "$failed" -ne 0 ]]; then
+            exit 1
+          fi
+
+          echo "Content-script security boundary check passed."
+
+      - name: Check for accidentally committed token
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if grep \
+            --recursive \
+            --line-number \
+            --binary-files=without-match \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            --exclude-dir=dist \
+            --exclude=package-lock.json \
+            --extended-regexp \
+            'github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}' \
+            .; then
+              echo "::error::A possible GitHub token was found in the repository."
+              exit 1
+          fi
+
+          echo "No GitHub token pattern was found."
+
+      - name: Create extension package
+        if: github.event_name == 'push'
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ steps.version.outputs.version }}"
+          PACKAGE_DIRECTORY="release-package"
+          ARCHIVE_NAME="github-enhanced-view-v${VERSION}.zip"
+          ARTIFACT_NAME="github-enhanced-view-v${VERSION}"
+
+          mkdir -p "$PACKAGE_DIRECTORY/dist"
+
+          cp -R dist/. "$PACKAGE_DIRECTORY/dist/"
+          cp manifest.json "$PACKAGE_DIRECTORY/"
+          cp README.md "$PACKAGE_DIRECTORY/"
+          cp LICENSE "$PACKAGE_DIRECTORY/"
+
+          if [[ -f "PRIVACY.md" ]]; then
+            cp PRIVACY.md "$PACKAGE_DIRECTORY/"
+          fi
+
+          if [[ -f "THIRD_PARTY_NOTICES.md" ]]; then
+            cp THIRD_PARTY_NOTICES.md "$PACKAGE_DIRECTORY/"
+          fi
+
+          (
+            cd "$PACKAGE_DIRECTORY"
+            zip -r "../$ARCHIVE_NAME" .
+          )
+
+          echo "archive=$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
+          echo "artifact-name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Upload extension package
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.artifact-name }}
+          path: ${{ steps.package.outputs.archive }}
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Create release when VERSION changes
+    runs-on: ubuntu-latest
+
+    needs:
+      - build
+
+    if: github.event_name == 'push'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check whether VERSION changed
+        id: version-changed
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BEFORE="${{ github.event.before }}"
+          CURRENT="${{ github.sha }}"
+
+          changed="false"
+
+          if [[ "$BEFORE" =~ ^0+$ ]]; then
+            if git diff-tree \
+              --no-commit-id \
+              --name-only \
+              -r "$CURRENT" |
+              grep -qx "VERSION"; then
+                changed="true"
+            fi
+          elif git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            if git diff \
+              --name-only \
+              "$BEFORE" \
+              "$CURRENT" |
+              grep -qx "VERSION"; then
+                changed="true"
+            fi
+          else
+            echo "::warning::Previous commit is unavailable; checking the current commit only."
+
+            if git diff-tree \
+              --no-commit-id \
+              --name-only \
+              -r "$CURRENT" |
+              grep -qx "VERSION"; then
+                changed="true"
+            fi
+          fi
+
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+          if [[ "$changed" == "true" ]]; then
+            echo "VERSION changed. Release processing will continue."
+          else
+            echo "VERSION did not change. Release will be skipped."
+          fi
+
+      - name: Check whether release tag already exists
+        if: steps.version-changed.outputs.changed == 'true'
+        id: tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ needs.build.outputs.version }}"
+          TAG="v${VERSION}"
+
+          if git ls-remote \
+            --exit-code \
+            --tags \
+            origin \
+            "refs/tags/${TAG}" \
+            >/dev/null 2>&1; then
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              echo "Tag ${TAG} already exists. Release will be skipped."
+          else
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              echo "Tag ${TAG} does not exist."
+          fi
+
+      - name: Download extension package
+        if: >
+          steps.version-changed.outputs.changed == 'true' &&
+          steps.tag.outputs.exists == 'false'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}
+          path: release-assets
+
+      - name: Locate extension package
+        if: >
+          steps.version-changed.outputs.changed == 'true' &&
+          steps.tag.outputs.exists == 'false'
+        id: archive
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ARCHIVE_PATH="$(
+            find release-assets \
+              -type f \
+              -name '*.zip' \
+              -print \
+              -quit
+          )"
+
+          if [[ -z "$ARCHIVE_PATH" ]]; then
+            echo "::error::Extension ZIP package was not found."
+            exit 1
+          fi
+
+          echo "path=$ARCHIVE_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Extract release notes
+        if: >
+          steps.version-changed.outputs.changed == 'true' &&
+          steps.tag.outputs.exists == 'false'
+        id: release-notes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ needs.build.outputs.version }}"
+          RELEASE_NOTES="RELEASE-NOTES.md"
+
+          if [[ ! -f "$RELEASE_NOTES" ]]; then
+            echo "has-body=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::RELEASE-NOTES.md was not found. Generated notes will be used."
+            exit 0
+          fi
+
+          tr -d '\r' \
+            < "$RELEASE_NOTES" \
+            > release-notes.normalized.md
+
+          awk -v version="$VERSION" '
+            BEGIN {
+              capture = 0
+            }
+
+            $0 ~ "^## \\[" version "\\]" {
+              capture = 1
+            }
+
+            capture &&
+            $0 ~ "^## \\[" &&
+            $0 !~ "^## \\[" version "\\]" {
+              exit
+            }
+
+            capture {
+              print
+            }
+          ' release-notes.normalized.md \
+            > release-body.md
+
+          if [[ -s release-body.md ]]; then
+            echo "has-body=true" >> "$GITHUB_OUTPUT"
+            echo "path=release-body.md" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-body=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No release notes section was found for version $VERSION."
+          fi
+
+      - name: Create GitHub release from release notes
+        if: >
+          steps.version-changed.outputs.changed == 'true' &&
+          steps.tag.outputs.exists == 'false' &&
+          steps.release-notes.outputs.has-body == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          ARCHIVE_PATH: ${{ steps.archive.outputs.path }}
+          RELEASE_BODY: ${{ steps.release-notes.outputs.path }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG="v${VERSION}"
+
+          gh release create "$TAG" \
+            "$ARCHIVE_PATH" \
+            --target "${{ github.sha }}" \
+            --title "GitHub Enhanced View ${TAG}" \
+            --notes-file "$RELEASE_BODY"
+
+      - name: Create GitHub release with generated notes
+        if: >
+          steps.version-changed.outputs.changed == 'true' &&
+          steps.tag.outputs.exists == 'false' &&
+          steps.release-notes.outputs.has-body != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          ARCHIVE_PATH: ${{ steps.archive.outputs.path }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG="v${VERSION}"
+
+          gh release create "$TAG" \
+            "$ARCHIVE_PATH" \
+            --target "${{ github.sha }}" \
+            --title "GitHub Enhanced View ${TAG}" \
+            --generate-notes
