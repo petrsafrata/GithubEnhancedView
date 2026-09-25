@@ -16,7 +16,7 @@
     "developer-tools"
   ],
   "author": "Petr Šafrata",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/chrome": "^0.0.268",
     "@types/node": "^20.11.30",
